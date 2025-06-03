@@ -1,6 +1,6 @@
 # Tech Daily News
 
-Tech Daily News è uno script Python che recupera, filtra e riassume automaticamente le principali notizie tech dal web, generando una newsletter in formato markdown.
+Tech Daily News è uno script Python che raccoglie alcune notizie tecnologiche dal web, le filtra in base a topic di interesse e genera una newsletter in formato markdown. Il progetto utilizza tecniche di web scraping e modelli di linguaggio per selezionare e riassumere i contenuti in modo automatico.
 
 ## Requisiti
 - Python >= 3.11
