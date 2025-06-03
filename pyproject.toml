@@ -1,0 +1,14 @@
+[project]
+name = "tech-daily-news"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "beautifulsoup4>=4.13.4",
+    "fake-useragent>=2.2.0",
+    "langchain>=0.3.25",
+    "langchain-ollama>=0.3.3",
+    "langchain-openai>=0.3.19",
+    "requests>=2.32.3",
+]
