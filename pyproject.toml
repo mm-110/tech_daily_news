@@ -10,5 +10,8 @@ dependencies = [
     "langchain>=0.3.25",
     "langchain-ollama>=0.3.3",
     "langchain-openai>=0.3.19",
+    "pillow>=11.2.1",
+    "playwright>=1.52.0",
+    "python-dotenv>=1.1.0",
     "requests>=2.32.3",
 ]

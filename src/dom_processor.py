@@ -87,10 +87,10 @@ def get_body_representation(
     """
     if isinstance(element, Tag):
         if element.name == "a":
-            href = element.get("href", "Link a qualcosa")
+            href = element.get("href", "")
             result += "-" * depth + f"{element.name}: {href}\n"
         elif element.name == "img":
-            src = element.get("src", "Link ad immagine")
+            src = element.get("src", "")
             result += "-" * depth + f"{element.name}: {src}\n"
         for child in element.children:
             result = get_body_representation(child, depth + 1, result)
@@ -110,7 +110,9 @@ def extract_main_text(html: str) -> str:
     Estrae il testo principale da una pagina HTML, rimuovendo elementi poco rilevanti come style, script, header, footer, nav, ecc.
     """
     soup = BeautifulSoup(html, "html.parser")
-    for tag in soup(["style", "script", "header", "footer", "nav", "aside", "form", "noscript"]):
+    for tag in soup(
+        ["style", "script", "header", "footer", "nav", "aside", "form", "noscript"]
+    ):
         tag.decompose()
     text = soup.get_text(separator="\n", strip=True)
     lines = [line for line in text.splitlines() if line.strip()]

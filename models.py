@@ -61,8 +61,6 @@ class OpenBrowserSessionOutput(BaseModel):
 class CloseBrowserSessionOutput(BaseModel):
     message: str
 
-class GetPageHTML(BaseModel):
-    content: str
 
 class GetStructuredPageContentOutput(BaseModel):
     structured_content: str

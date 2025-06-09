@@ -1,12 +1,22 @@
 from src.dom_processor import fetch_html, get_links, extract_main_text
 from src.llm import LLM
-from src.models import PageRepresentation
+from src.models import PageRepresentation, NavigateToUrlInput
 from src.newsletter_utils import save_newsletter_markdown
+from src.session_tools import open_browser_session, navigate_to_url, get_html
+
+import time
 
 
 def main():
     url = "https://news.ycombinator.com"
-    html_content = fetch_html(url)
+
+    open_browser_session()
+    navigate_to_url(NavigateToUrlInput(url=url))
+    time.sleep(2)
+
+    # html_content = fetch_html(url)
+    html_content = get_html().content
+
     llm = LLM()
 
     if not html_content:
@@ -32,7 +42,9 @@ def main():
     # Per ogni link filtrato, recupera l'html, estrai il testo principale e genera il riassunto
     page_contents = []
     for link in filtered_links.links:
-        page_html = fetch_html(link.link)
+        # page_html = fetch_html(link.link)
+        navigate_to_url(NavigateToUrlInput(url=link.link))
+        page_html = get_html().content
         if not page_html:
             continue
         page_repr = extract_main_text(page_html)
