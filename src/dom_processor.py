@@ -2,6 +2,7 @@ from src.models import Link
 from bs4 import BeautifulSoup, Tag, NavigableString
 from typing import Optional, Callable, Dict, List, Union
 import requests
+from typing import List, Optional
 
 
 def fetch_html(url: str, timeout: int = 10) -> Optional[str]:

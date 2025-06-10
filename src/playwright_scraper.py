@@ -199,25 +199,21 @@ class PlaywrightBrowserSessionHandler(BrowserSessionHandler):
     def screenshot_element(self, selector: str, path: str, output_format: str = 'png'):
         """
         Fa lo screenshot dell'elemento identificato dal selettore CSS, se visibile.
-        Salva direttamente nel formato richiesto ('png' o 'jpeg').
-        Il parametro 'path' deve essere passato SENZA estensione: l'estensione viene aggiunta qui in base all'output_format.
+        Nasconde elementi 'fixed' e 'sticky' che possono coprire il contenuto, 
+        mantenendo visibile l'elemento target se è uno di essi.
+        
+        Args:
+            selector (str): Selettore CSS dell'elemento da screenshottare
+            path (str): Percorso del file (senza estensione)
+            output_format (str): 'png' o 'jpeg'
+        
+        Returns:
+            str | None: Percorso del file salvato, o None in caso di errore
         """
         if not self.browser or not self.page:
             raise RuntimeError("Session not open. Call open_session() first.")
 
-        # 1. Rimuove overlay fissi che possono bloccare la vista
-        self.page.evaluate("""
-            const elements = Array.from(document.querySelectorAll('*'));
-            for (const el of elements) {
-                const style = window.getComputedStyle(el);
-                if (style.position == 'fixed' && parseFloat(style.opacity) > 0.1 && 
-                    style.display !== 'none' && style.visibility !== 'hidden') {
-                    el.remove();
-                }
-            }
-        """)
-
-        # 2. Trova l'elemento
+        # 1. Trova l'elemento PRIMA di nascondere altri
         try:
             element = self.page.query_selector(selector)
             if not element:
@@ -227,16 +223,64 @@ class PlaywrightBrowserSessionHandler(BrowserSessionHandler):
             print(f"[WARN] Errore nel trovare elemento '{selector}': {e}")
             return
 
-        # 3. Verifica visibilità reale
+        # 2. Ottieni bounding box JS dell'elemento per confronto
+        try:
+            target_box = self.page.evaluate("""
+                (el) => {
+                    const rect = el.getBoundingClientRect();
+                    return {
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height
+                    };
+                }
+            """, element)
+        except Exception as e:
+            print(f"[ERROR] Impossibile ottenere bounding box: {e}")
+            return
+
+        # 3. Nascondi overlay sticky/fixed che NON sono il target
+        self.page.evaluate("""
+            (targetBox) => {
+                const elements = Array.from(document.querySelectorAll('*'));
+                for (const el of elements) {
+                    const style = window.getComputedStyle(el);
+                    const rect = el.getBoundingClientRect();
+                    const position = style.position;
+                    
+                    const isOverlay = (
+                        (position === 'fixed' || position === 'sticky') &&
+                        parseFloat(style.opacity) > 0.1 &&
+                        style.display !== 'none' &&
+                        style.visibility !== 'hidden'
+                    );
+                    
+                    const isTarget = (
+                        Math.abs(rect.top - targetBox.top) < 1 &&
+                        Math.abs(rect.left - targetBox.left) < 1 &&
+                        Math.abs(rect.width - targetBox.width) < 1 &&
+                        Math.abs(rect.height - targetBox.height) < 1
+                    );
+                    
+                    if (isOverlay && !isTarget) {
+                        el.style.display = 'none';
+                    }
+                }
+            }
+        """, target_box)
+
+        # 4. Verifica visibilità
         is_visible = self.page.evaluate("""
             (el) => {
-                if (!el) return false;
                 const rect = el.getBoundingClientRect();
                 const style = window.getComputedStyle(el);
-                return rect.width > 0 && rect.height > 0 && 
-                       style.display !== 'none' && 
-                       style.visibility !== 'hidden' && 
-                       parseFloat(style.opacity) > 0;
+                return (
+                    rect.width > 0 && rect.height > 0 &&
+                    style.display !== 'none' &&
+                    style.visibility !== 'hidden' &&
+                    parseFloat(style.opacity) > 0
+                );
             }
         """, element)
 
@@ -244,18 +288,22 @@ class PlaywrightBrowserSessionHandler(BrowserSessionHandler):
             print(f"[WARN] Elemento '{selector}' non visibile, skippo lo screenshot.")
             return
 
-        # 4. Scrolla l'elemento in vista
-        element.scroll_into_view_if_needed()
+        # 5. Scrolla l'elemento in vista
+        try:
+            element.scroll_into_view_if_needed()
+        except Exception as e:
+            print(f"[WARN] Scroll fallito: {e}")
 
-        # 5. Screenshot dell'elemento nel formato richiesto
+        # 6. Screenshot dell'elemento
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             ext = '.jpg' if output_format.lower() in ['jpeg', 'jpg'] else '.png'
             full_path = path + ext
-            if output_format.lower() in ['jpeg', 'jpg']:
-                element.screenshot(path=full_path, type='jpeg', quality=70)
-            else:
-                element.screenshot(path=full_path, type='png', quality=70)
+            element.screenshot(
+                path=full_path,
+                type='jpeg' if output_format.lower() in ['jpeg', 'jpg'] else 'png',
+                quality=70
+            )
             print(f"[INFO] Screenshot salvato in: {full_path} ({output_format})")
             return full_path
         except Exception as e:

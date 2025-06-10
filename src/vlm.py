@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Literal
 
 from src.prompts import describe_website_portion_screenshot_prompt
-from src.models import PageInfoOutput, BoundingBoxInfo
+from src.models import PageInfoOutput, BoundingBox
 
 from dotenv import load_dotenv
 
@@ -41,7 +41,7 @@ class VLM:
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
     def describe_image(
-        self, file_path: str, page_info: PageInfoOutput, bounding_box: BoundingBoxInfo
+        self, file_path: str, page_info: PageInfoOutput, bounding_box: BoundingBox
     ) -> str:
         variables = {
             "page_type": page_info.page_type,

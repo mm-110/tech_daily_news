@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from enum import Enum
+from dataclasses import dataclass
 
 
 class Link(BaseModel):
@@ -28,7 +29,20 @@ class PageRepresentation(BaseModel):
     page_representation: str
 
 
-class BoundingBoxInfo(BaseModel):
+class SelectorType(Enum):
+    CSS = "css"
+    XPATH = "xpath"
+
+
+class ContainerFinderResult(Enum):
+    SUCCESS = "success"
+    LEAF_NODE_FOUND = "leaf_node_found"
+    SELECTOR_NOT_FOUND = "selector_not_found"
+    INVALID_SELECTOR = "invalid_selector"
+    DEPTH_LIMIT_REACHED = "depth_limit_reached"
+
+
+class BoundingBox(BaseModel):
     tag: str  # L'intero tag HTML del bounding box (incluso markup)
     css_selector: str  # selettore CSS full path
     xpath: str  # selettore XPath
@@ -41,6 +55,15 @@ class BoundingBoxInfo(BaseModel):
     def area(self) -> int:
         """Calcola l'area del bounding box."""
         return self.width * self.height
+
+
+@dataclass
+class ContainerSearchResult:
+    result_type: ContainerFinderResult
+    container: Optional[BoundingBox]
+    search_path: List[BoundingBox]
+    message: str
+    depth: int
 
 
 # --- Tool Input/Output Schemas ---
@@ -61,8 +84,10 @@ class OpenBrowserSessionOutput(BaseModel):
 class CloseBrowserSessionOutput(BaseModel):
     message: str
 
+
 class GetPageHTML(BaseModel):
     content: str
+
 
 class GetStructuredPageContentOutput(BaseModel):
     structured_content: str
@@ -77,7 +102,7 @@ class GetBoundingBoxesInput(BaseModel):
 
 
 class GetBoundingBoxesOutput(BaseModel):
-    bounding_boxes: List[BoundingBoxInfo]
+    bounding_boxes: List[BoundingBox]
 
 
 class HighlightBoundingBoxInput(BaseModel):
@@ -104,7 +129,7 @@ class ScrollPageOutput(BaseModel):
 
 class ScreenshotElementInput(BaseModel):
     selector: str  # selettore CSS dell'elemento
-    path: str      # percorso file dove salvare lo screenshot
+    path: str  # percorso file dove salvare lo screenshot
     output_format: str
 
 
@@ -123,5 +148,6 @@ class PageInfoOutput(BaseModel):
     url: str
     width: int
     height: int
+
     def area(self) -> int:
         return self.width * self.height

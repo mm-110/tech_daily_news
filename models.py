@@ -28,7 +28,7 @@ class PageRepresentation(BaseModel):
     page_representation: str
 
 
-class BoundingBoxInfo(BaseModel):
+class BoundingBox(BaseModel):
     tag: str  # L'intero tag HTML del bounding box (incluso markup)
     css_selector: str  # selettore CSS full path
     xpath: str  # selettore XPath
@@ -75,7 +75,7 @@ class GetBoundingBoxesInput(BaseModel):
 
 
 class GetBoundingBoxesOutput(BaseModel):
-    bounding_boxes: List[BoundingBoxInfo]
+    bounding_boxes: List[BoundingBox]
 
 
 class HighlightBoundingBoxInput(BaseModel):

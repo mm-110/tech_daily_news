@@ -10,7 +10,7 @@ from src.models import (
     GetLinksFromPageOutput,
     GetBoundingBoxesInput,
     GetBoundingBoxesOutput,
-    BoundingBoxInfo,
+    BoundingBox,
     HighlightBoundingBoxInput,
     HighlightBoundingBoxOutput,
     ScrollDirection,
@@ -142,14 +142,14 @@ def safe_class(val):
 def get_bounding_boxes(input_data: GetBoundingBoxesInput) -> GetBoundingBoxesOutput:
     """
     Recupera tutti i bounding box visibili a partire da un selettore (default: body).
-    Ritorna una lista di BoundingBoxInfo con solo il tag di apertura (es: <div class="...">) e il numero di figli.
+    Ritorna una lista di BoundingBox con solo il tag di apertura (es: <div class="...">) e il numero di figli.
     """
     try:
         results = BROWSER_HANDLER.get_bounding_boxes(input_data.selector)
         bounding_boxes = []
         for box in results:
             bounding_boxes.append(
-                BoundingBoxInfo(
+                BoundingBox(
                     tag=box.get("tag", ""),
                     css_selector=box["css_selector"],
                     xpath=box["xpath"],
@@ -236,11 +236,11 @@ def get_page_info(input: PageInfoInput) -> PageInfoOutput:
 def describe_screenshot_element(
     screenshot_output: ScreenshotElementOutput,
     page_info: PageInfoOutput,
-    bounding_box: BoundingBoxInfo,
+    bounding_box: BoundingBox,
     model=ModelType.LLAMA,
 ) -> str | None:
     """
-    Descrive uno screenshot di un elemento usando VLM, dato ScreenshotElementOutput, PageInfoOutput e BoundingBoxInfo.
+    Descrive uno screenshot di un elemento usando VLM, dato ScreenshotElementOutput, PageInfoOutput e BoundingBox.
     """
     if not screenshot_output or not screenshot_output.image_path:
         return None

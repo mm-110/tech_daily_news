@@ -47,7 +47,7 @@ summarize_page_prompt = """
 """
 
 describe_website_portion_screenshot_prompt = """
-# Task: Screenshot UI Element Analysis - Precise Structural Description
+# Task: Screenshot UI Element Analysis - Precise Structural Description with UI Component Classification
 
 ## Persona:
 You are an expert UI/UX analyst for a leading technology company, renowned for your meticulous attention to detail, objective reporting, and ability to precisely interpret visual information within user interfaces. Your core function is to generate highly accurate and strictly factual structural descriptions of web page elements based **solely on the provided screenshot**. You excel at distinguishing between visible elements and inferred elements.
@@ -84,66 +84,41 @@ You are provided with a visual screenshot of a web page, or a specifically defin
 
 ## Required Description Components (Exhaustive & Factual):
 
-Provide a structured, bullet-point description covering the following elements. Each point must address whether the element is **VISIBLE within the screenshot** and provide precise details based *only* on that visibility.
+Provide a concise, free-flowing description of the visible UI elements within the screenshot. Focus on identifying and characterizing the type of section or component shown, leveraging common UI terminology. Use the provided bounding box coordinates and HTML context to inform your understanding of the screenshot's position relative to the full page. Conclude with a list of relevant UI component keywords.
 
-1.  **Header/Navigation Area (Navbar)**:
-    * **Presence & Visibility**: State if a header or navigation bar is visible.
-    * **Contextual Detail**: If present, specify *how much* of the navbar is visible (e.g., "full navbar visible", "top portion of a floating navbar", "only the right-most icons of a collapsed header").
-    * **Sub-elements**: List precisely visible sub-elements:
-        * **Logo**: If visible, describe its position (e.g., "logo positioned top-left").
-        * **Menu Items/Links**: If visible, specify if they are text links, icon-based, or a hamburger menu. If text, state if legible (e.g., "visible text links 'Home', 'Shop', 'About us'").
-        * **Interactive Icons**: Identify and locate visible icons (e.g., "search icon top-right", "language selector icon visible").
+**Description Guidelines:**
+* Start by broadly classifying the visible area. Is it likely a header, a content area, a footer, or a specific interactive component?
+* Describe the most prominent elements first.
+* Mention the presence and general nature of elements like navigation, titles, images, content layouts (e.g., grids, lists), buttons, and interactive controls.
+* **Crucially, use the `X-coordinate (top-left): {x}` and `Y-coordinate (top-left): {y}` combined with `Original Full Page Dimensions` to infer if the screenshot represents the *top*, *middle*, or *bottom* portion of the original page, which can help in identifying potential header/footer presence.**
+* **Leverage the `Full HTML Tag: {tag_html}` parameter to infer the nature of the UI element shown, especially if it contains semantic HTML tags (e.g., `<nav>`, `<header>`, `<footer>`, `<main>`, `<aside>`, `<section>`) or class names that strongly suggest a specific UI component (e.g., `class="navbar"`, `id="main-content"`, `class="product-grid"`).**
+* If text is clearly legible and concise (e.g., button labels, main headings), transcribe it. Otherwise, refer to it generally (e.g., "legible text content", "text not discernible").
 
-2.  **Main Titles / Headings**:
-    * **Presence & Content**: Identify any prominent textual titles or headings (e.g., page title, section heading).
-    * **Legibility**: **If the text is clearly legible (e.g., 8pt font or larger, high contrast), transcribe its exact content (e.g., "Italian Luxury Jewelry", "B.zero1 Jewelry"). If not legible, state "Text not discernible".**
-    * **Location**: State their approximate location (e.g., "top-center, overlaying an image", "below the header").
+## Final Output Structure - STRICT CLASSIFICATION & KEYWORDS:
+Conclude your description with a clear classification of the primary UI component type visible and a list of associated keywords.
 
-3.  **Filtering & Sorting Controls**:
-    * **Presence & State**: State if any UI elements related to filtering or sorting content are visible.
-    * **Visibility Detail**: **Crucially, specify their state**:
-        * "Visible but collapsed": If only the button/label to activate filters/sorting is present.
-        * "Visible with options": If the filter/sorting options themselves are expanded and displayed (e.g., a sidebar with checkboxes).
-    * **Labels**: Provide their labels (e.g., "Filters", "Sort by", "Price Range").
-    * **Location**: Indicate their precise position (e.g., "top-right", "left sidebar").
+**Overall Description:**
+[Your free-flowing description of the screenshot content, incorporating observations about its relative position on the page based on coordinates and insights from the HTML tag.]
 
-4.  **Promotional / Hero Banners & Key Images**:
-    * **Presence & Prominence**: Identify any large, visually prominent images or banner sections.
-    * **Layout**: Describe its layout within the screenshot (e.g., "full-width hero image", "large square banner occupying the upper half").
-    * **Associated Elements**: Mention any directly associated text or interactive elements (e.g., buttons, text overlays, small captions) *within* the banner. **If a button is visible, state its exact label (e.g., "Discover button").**
-    * **Primary Focus**: **If a significant product image is the primary and dominant focus of the screenshot (e.g., a zoomed-in product shot filling most of the frame), describe it as such, detailing its visual characteristics within the frame and confirming no other major UI elements are visible.**
+---
 
-5.  **Main Content Display Area**:
-    * **Characterization**: Describe the primary layout of the main content within the screenshot.
-    * **Grid Layout**: If a grid of repeated items (e.g., product cards, articles) is visible:
-        * Specify the approximate number of columns (e.g., "3-column grid").
-        * State if it fills the visible area.
-        * Mention if individual items contain sub-elements (images, text labels like product names/prices, small buttons).
-    * **List Layout**: If a vertical list of items is visible.
-    * **Single Content Block**: If the screenshot primarily displays a single, dominant content block (e.g., a detailed product view, a large article image).
-    * **Crucial Rule for Listing Grid**: **The screenshot *contains* a "listing grid" only if a substantial portion of the grid structure (multiple rows/columns of items) is entirely visible within the screenshot, even if a 'Load More' button implies more items exist beyond the current view.** If only a tiny fragment of a grid is visible (e.g., one corner of one item), then it does not "contain" the listing grid for descriptive purposes.
+**Identified UI Component & Keywords:**
+**Component Type:** [Choose the most appropriate classification, or formulate a new one if what's visible doesn't perfectly fit the examples below. The examples are a guide, not an exhaustive list.]
+* `Navbar`
+* `Hero Banner`
+* `Product Listing Grid`
+* `Product Carousel`
+* `Filter/Sorting Controls`
+* `Product Detail View`
+* `Form Section`
+* `Footer`
+* `Partial Header`
+* `Partial Footer`
+* `Call-to-Action Section`
+* `Content Block (e.g., article, text heavy)`
+* `Undefined UI Section`
+* `Empty/Whitespace Area`
+* *[Your custom component type, if applicable]*
 
-6.  **Buttons and Call-to-Actions (CTAs)**:
-    * **List & Labels**: List all visible interactive buttons and provide their **exact legible labels** (e.g., "Load More", "Discover", "Add to Cart", "Shop Now").
-    * **Location**: Specify their precise location relative to other elements (e.g., "bottom-center of the grid", "within a banner overlay", "standalone below text").
-    * **"Load More" Specificity**: If a "Load More" button is visible, specifically state: "A 'Load More' button is visible, indicating that more products/items can be loaded into the current view, even though the currently visible listing grid is fully displayed within the screenshot."
-
-7.  **Whitespace / Empty Areas**:
-    * **Presence & Location**: Identify any significant blank or empty regions within the screenshot.
-    * **Description**: Specify their approximate location and extent (e.g., "large blank space in the lower half of the screenshot", "narrow vertical column of whitespace on the right side").
-
-8.  **Footer Elements**:
-    * **Presence & Visibility**: State if any part of a footer section is visible.
-    * **Contextual Detail**: If present, describe precisely what is visible: links (e.g., "contact", "privacy", "newsletter signup"), social media icons, copyright information.
-    * **Strictly indicate if it's a partial view (e.g., "Partial footer showing only social icons and a copyright line") or "full footer visible".**
-
-## Final Output Structure - STRICT CLASSIFICATION:
-Conclude your description with a single, concise section label. **This label MUST accurately reflect the *entirety* of the visible content within the screenshot, adhering to the following strict criteria.** Do NOT infer beyond the screenshot's boundaries.
-
--   `Section type: Full Page Listing with Header, Grid, and Footer` (Use ONLY if **Header**, **a substantial Listing Grid**, and **Footer** are ALL entirely visible within the screenshot, even if a 'Load More' button is present for future content).
--   `Section type: Listing Grid with Header and Load More Button` (Use if a substantial Listing Grid and Header are visible, along with a 'Load More' button, but the Footer is NOT visible).
--   `Section type: Cropped Hero Banner with Visible Elements` (Use if the screenshot is primarily a large promotional image with text/buttons, and minimal other UI elements are visible).
--   `Section type: Header and Initial Product Grid` (Use if the header and the beginning of a product grid are visible, but the grid is clearly not fully contained nor a load more button).
--   `Section type: Specific UI Component View` (For very granular, isolated elements, e.g., only a search bar, or a single product card fragment).
--   `Section type: Undefined Layout` (If the visible content does not fit predefined categories well).
+**Keywords:** [List 3-7 relevant UI component keywords that accurately describe the visible elements. These keywords should help in identifying the element's function or typical UI pattern. Feel free to use terms not explicitly listed here if they are more accurate, e.g., 'header', 'navigation', 'logo', 'search bar', 'product cards', 'pagination', 'add to cart button', 'social media icons', 'copyright info', 'filter options', 'sort by', 'hero image', 'CTA button', 'text overlay', 'grid layout', 'list layout', 'form fields', 'submit button', 'breadcrumbs', 'tab navigation', 'card layout', 'thumbnail gallery', 'price range slider', 'shopping cart icon', 'user profile icon', 'newsletter signup']
 """
