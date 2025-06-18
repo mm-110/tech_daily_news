@@ -13,7 +13,10 @@ wheels/
 *.md
 *.csv
 *.txt
+*.html
 /screenshots/
 
 
 .DS_Store
+
+~/.crawl4ai/

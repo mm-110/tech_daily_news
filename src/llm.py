@@ -1,5 +1,5 @@
 from src.models import Link, LinkList, PageRepresentation, PageContent
-from src.prompts import filter_links_prompt, summarize_page_prompt
+from src.prompts import filter_links_prompt, summarize_page_prompt, extract_article_links_prompt
 from enum import Enum
 from langchain_openai import ChatOpenAI
 from langchain_ollama import OllamaLLM
@@ -10,7 +10,8 @@ from typing import List
 
 class ModelType(Enum):
     DEEPSEEK = "deepseek-r1:7b"
-    LLAMA = "gemma3:12b"
+    LLAMA = "llama3.1:latest"
+    GEMMA = "gemma3:12b"
     OPENAI = "gpt-4o-mini"
 
 
@@ -45,6 +46,26 @@ class LLM:
         except Exception as e:
             print(f"Errore durante il filtraggio dei link: {e}")
             return LinkList(links=[])
+        
+    def extract_article_links(self, summary: str) -> LinkList:
+        """
+        Estrae i link che puntano a pagine di articoli da un riassunto di pagina.
+        """
+        from src.prompts import extract_article_links_prompt
+
+        link_list_parser = PydanticOutputParser(pydantic_object=LinkList)
+        prompt = PromptTemplate(
+            template=extract_article_links_prompt,
+            input_variables=["summary"],
+            partial_variables={"format_instructions": link_list_parser.get_format_instructions()},
+        )
+        chain = prompt | self.llm | link_list_parser
+        try:
+            article_links = chain.invoke({"summary": summary})
+            return article_links
+        except Exception as e:
+            print(f"Errore durante l'estrazione dei link agli articoli: {e}")
+            return []
 
     def summarize_page(self, page: PageRepresentation) -> PageContent:
         """
